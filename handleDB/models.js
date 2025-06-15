@@ -41,6 +41,10 @@ const Admin = sequelize.define("Admin", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
 });
 
 module.exports = { User, Admin };

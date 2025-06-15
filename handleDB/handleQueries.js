@@ -3,57 +3,70 @@ const { User, Admin } = require("./models");
 
 async function register(userInfo) {
   await User.sync(); // create table if doesn't exist
-  const { fullName, username, email, password } = userInfo;
+  const { password } = userInfo;
   const passEncrypted = encrypt(password);
-  const user = await User.create({
-    fullName,
-    username,
-    email,
-    password: passEncrypted,
-  });
+  const user = await User.create({ ...userInfo, password: passEncrypted });
   return user;
 }
 
 async function authenticate(userInfo) {
   await User.sync();
-  const { email, password } = userInfo;
+  const { password } = userInfo;
   const passEncrypted = encrypt(password);
   const user = await User.findOne({
-    where: { email, password: passEncrypted },
+    where: { ...userInfo, password: passEncrypted },
   });
   return user;
 }
 
 async function adminAccess(adminInfo) {
-  await Admin.sync();
-  const { email, password } = adminInfo;
+  const { password } = adminInfo;
   const passEncrypted = encrypt(password);
   const admin = await Admin.findOne({
-    where: { email, password: passEncrypted },
+    where: { ...adminInfo, password: passEncrypted },
   });
   return admin;
 }
 
-module.exports = { register, authenticate, adminAccess };
+async function getAdminsList() {
+  const admins = await Admin.findAll();
+  return admins;
+}
+
+async function updateAdminStatus(idList, status) {
+  const admins = await Admin.update({ status }, { where: { id: idList } });
+  return admins;
+}
+
+async function deleteAdmins(selectionList) {
+  const selectedIDs = selectionList.map((admin) => admin.id);
+  const admins = await Admin.destroy({ where: { id: selectedIDs } });
+  return admins;
+}
+
+module.exports = {
+  register,
+  authenticate,
+  adminAccess,
+  getAdminsList,
+  updateAdminStatus,
+  deleteAdmins,
+};
 
 // async function adminEntry(adminInfo) {
-//   await Admin.sync();
-//   const { fullName, username, email, password } = adminInfo;
+//   await Admin.sync({ force: true });
+//   const { password } = adminInfo;
 //   const passEncrypted = encrypt(password);
-//   const admin = await Admin.create({
-//     fullName,
-//     username,
-//     email,
-//     password: passEncrypted,
-//   });
+//   const admin = await Admin.create({ ...adminInfo, password: passEncrypted });
 //   return admin;
 // }
-// function adminObj(fullName, username, email, password) {
+// function adminObj(fullName, username, email, password, status) {
 //   return {
 //     fullName,
 //     username,
 //     email,
 //     password,
+//     status,
 //   };
 // }
 
@@ -66,6 +79,13 @@ module.exports = { register, authenticate, adminAccess };
 //   "t_es_t",
 //   "t_e_st",
 //   "t_e_s_t",
+//   "tes-t",
+//   "te-st",
+//   "t-est",
+//   "te-s-t",
+//   "t-es-t",
+//   "t-e-st",
+//   "t-e-s-t",
 // ];
 // const usernames = [
 //   "test",
@@ -76,6 +96,13 @@ module.exports = { register, authenticate, adminAccess };
 //   "t_es_t",
 //   "t_e_st",
 //   "t_e_s_t",
+//   "tes-t",
+//   "te-st",
+//   "t-est",
+//   "te-s-t",
+//   "t-es-t",
+//   "t-e-st",
+//   "t-e-s-t",
 // ];
 // const emails = [
 //   "test@example.com",
@@ -86,9 +113,22 @@ module.exports = { register, authenticate, adminAccess };
 //   "t_es_t@example.com",
 //   "t_e_st@example.com",
 //   "t_e_s_t@example.com",
+//   "tes-t@example.com",
+//   "te-st@example.com",
+//   "t-est@example.com",
+//   "te-s-t@example.com",
+//   "t-es-t@example.com",
+//   "t-e-st@example.com",
+//   "t-e-s-t@example.com",
 // ];
 // fullNames.map(async (fullName, index) => {
-//   const admin = adminObj(fullName, usernames[index], emails[index], "1234");
+//   const admin = adminObj(
+//     fullName,
+//     usernames[index],
+//     emails[index],
+//     "1234",
+//     "active"
+//   );
 //   const adminInfo = await adminEntry(admin);
 //   console.log(adminInfo);
 // });
