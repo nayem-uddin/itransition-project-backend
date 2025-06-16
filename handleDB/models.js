@@ -20,6 +20,11 @@ const User = sequelize.define("User", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "active",
+  },
 });
 
 const Admin = sequelize.define("Admin", {
@@ -44,6 +49,7 @@ const Admin = sequelize.define("Admin", {
   status: {
     type: DataTypes.STRING,
     allowNull: false,
+    defaultValue: "active",
   },
 });
 

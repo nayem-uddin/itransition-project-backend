@@ -8,6 +8,10 @@ const {
   getAdminsList,
   updateAdminStatus,
   deleteAdmins,
+  addNewAdmins,
+  getAllUsers,
+  updateUserStatus,
+  deleteUsers,
 } = require("./handleDB/handleQueries");
 const { UniqueConstraintError } = require("sequelize");
 
@@ -73,8 +77,7 @@ app.get("/admins", async (req, res, next) => {
 app.put("/admins", async (req, res, next) => {
   try {
     const { selectionList, status } = req.body;
-    const idList = selectionList.map((admin) => admin.id);
-    await updateAdminStatus(idList, status);
+    await updateAdminStatus(selectionList, status);
     res.status(200).send({ message: "Updated successfully" });
   } catch (error) {
     next(error);
@@ -83,7 +86,51 @@ app.put("/admins", async (req, res, next) => {
 
 app.delete("/admins", async (req, res, next) => {
   try {
-    const admins = await deleteAdmins(req.body);
+    await deleteAdmins(req.body);
+    res.status(200).send({ message: "Deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/admins", async (req, res, next) => {
+  try {
+    const newAdmins = await addNewAdmins(req.body);
+    res
+      .status(201)
+      .send({ message: "Successfully added to admins' list", newAdmins });
+  } catch (error) {
+    if (error instanceof UniqueConstraintError) {
+      return res
+        .status(409)
+        .send({ message: "One or more users are already admins" });
+    }
+    next(error);
+  }
+});
+
+app.get("/users", async (req, res, next) => {
+  try {
+    const usersList = await getAllUsers();
+    res.status(200).send({ message: "fetched successfully", usersList });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.put("/users", async (req, res, next) => {
+  try {
+    const { selectionList, status } = req.body;
+    await updateUserStatus(selectionList, status);
+    res.status(200).send({ message: "Updated successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete("/users", async (req, res, next) => {
+  try {
+    await deleteUsers(req.body);
     res.status(200).send({ message: "Deleted successfully" });
   } catch (error) {
     next(error);

@@ -1,5 +1,6 @@
 const { encrypt } = require("../encryption");
 const { User, Admin } = require("./models");
+const { destructureProps, getSelectedIDs } = require("./utilityFunctions");
 
 async function register(userInfo) {
   await User.sync(); // create table if doesn't exist
@@ -19,6 +20,24 @@ async function authenticate(userInfo) {
   return user;
 }
 
+async function getAllUsers() {
+  await User.sync();
+  const users = await User.findAll();
+  return users;
+}
+
+async function updateUserStatus(selectionList, status) {
+  const idList = getSelectedIDs(selectionList);
+  const users = await User.update({ status }, { where: { id: idList } });
+  return users;
+}
+
+async function deleteUsers(selectionList) {
+  const idList = getSelectedIDs(selectionList);
+  const users = await User.destroy({ where: { id: idList } });
+  return users;
+}
+
 async function adminAccess(adminInfo) {
   const { password } = adminInfo;
   const passEncrypted = encrypt(password);
@@ -33,15 +52,22 @@ async function getAdminsList() {
   return admins;
 }
 
-async function updateAdminStatus(idList, status) {
+async function updateAdminStatus(selectionList, status) {
+  const idList = getSelectedIDs(selectionList);
   const admins = await Admin.update({ status }, { where: { id: idList } });
   return admins;
 }
 
 async function deleteAdmins(selectionList) {
-  const selectedIDs = selectionList.map((admin) => admin.id);
+  const selectedIDs = getSelectedIDs(selectionList);
   const admins = await Admin.destroy({ where: { id: selectedIDs } });
   return admins;
+}
+
+async function addNewAdmins(users) {
+  const usersInfo = users.map(destructureProps);
+  const newAdmins = await Admin.bulkCreate(usersInfo);
+  return newAdmins;
 }
 
 module.exports = {
@@ -51,6 +77,10 @@ module.exports = {
   getAdminsList,
   updateAdminStatus,
   deleteAdmins,
+  addNewAdmins,
+  getAllUsers,
+  updateUserStatus,
+  deleteUsers,
 };
 
 // async function adminEntry(adminInfo) {
