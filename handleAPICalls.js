@@ -42,6 +42,8 @@ app.post("/login", async (req, res, next) => {
       return res
         .status(401)
         .send({ message: "Invalid credentials or account doesn't exist" });
+    } else if (userInfo.status === "blocked") {
+      return res.status(403).send({ message: "You are blocked" });
     }
     res.status(200).send({ message: "Login successful", userInfo });
   } catch (error) {
