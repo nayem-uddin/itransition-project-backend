@@ -24,9 +24,9 @@ const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-app.listen(5000, () => {
-  console.log("Server running at port 5000");
-});
+// app.listen(5000, () => {
+//   console.log("Server running at port 5000");
+// });
 app.use(
   cors({
     origin: frontEndUrl,
@@ -199,3 +199,5 @@ app.put("/templates", validateTemplate, async (req, res, next) => {
     next(error);
   }
 });
+
+module.exports = { app };
