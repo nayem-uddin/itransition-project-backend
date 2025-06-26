@@ -187,7 +187,6 @@ app.post("/templates", validateTemplate, async (req, res, next) => {
       });
     });
     await createTemplate(template);
-    // console.log(req.body);
     res
       .status(201)
       .send({ text: "Template created Successfully", type: "confirmation" });
