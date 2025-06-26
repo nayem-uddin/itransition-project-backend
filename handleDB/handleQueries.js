@@ -1,6 +1,13 @@
-const { encrypt } = require("../encryption");
-const { User, Admin } = require("./models");
-const { destructureProps, getSelectedIDs } = require("./utilityFunctions");
+const {
+  User,
+  Admin,
+  Tag,
+  Topic,
+  Template,
+  Question,
+  Comment,
+} = require("./models");
+const { destructureProps, getSelectedIDs, encrypt } = require("./utilities");
 
 async function register(userInfo) {
   await User.sync(); // create table if doesn't exist
@@ -70,6 +77,57 @@ async function addNewAdmins(users) {
   return newAdmins;
 }
 
+async function getTags() {
+  const tags = await Tag.findAll({ attributes: ["tagname"] });
+  return tags.map((tag) => tag.tagname);
+}
+
+async function getTopics() {
+  const topics = await Topic.findAll({ attributes: ["topic"] });
+  return topics.map((topic) => topic.topic);
+}
+
+async function createTemplate(template) {
+  const { tags } = template;
+  const tagnames = tags.map((tag) => ({
+    tagname: tag,
+  }));
+  await Tag.bulkCreate(tagnames, { ignoreDuplicates: true });
+  await Question.sync();
+  await Template.sync();
+  const newTemplate = await Template.create(template, { include: [Question] });
+  return newTemplate;
+}
+
+async function getAllTemplates() {
+  await Template.sync();
+  await Question.sync();
+  await Comment.sync();
+  const templates = await Template.findAll({
+    include: [Question, Comment, { model: User, attributes: ["fullName"] }],
+  });
+  return templates;
+}
+
+async function getCreatedTemplates(userId) {
+  const templates = await Template.findAll({
+    where: { userId },
+    include: [Question, Comment],
+  });
+  return templates;
+}
+
+async function updateTemplate(template) {
+  const { id, Questions, ...templateFields } = template;
+  const updatedTemplate = await Template.update(templateFields, {
+    where: { id },
+  });
+  for (let q of Questions) {
+    await Question.upsert({ ...q, TemplateId: id });
+  }
+  return updatedTemplate;
+}
+
 module.exports = {
   register,
   authenticate,
@@ -81,84 +139,10 @@ module.exports = {
   getAllUsers,
   updateUserStatus,
   deleteUsers,
+  getTags,
+  getTopics,
+  createTemplate,
+  getAllTemplates,
+  getCreatedTemplates,
+  updateTemplate,
 };
-
-// async function adminEntry(adminInfo) {
-//   await Admin.sync({ force: true });
-//   const { password } = adminInfo;
-//   const passEncrypted = encrypt(password);
-//   const admin = await Admin.create({ ...adminInfo, password: passEncrypted });
-//   return admin;
-// }
-// function adminObj(fullName, username, email, password, status) {
-//   return {
-//     fullName,
-//     username,
-//     email,
-//     password,
-//     status,
-//   };
-// }
-
-// const fullNames = [
-//   "test",
-//   "tes_t",
-//   "te_st",
-//   "t_est",
-//   "te_s_t",
-//   "t_es_t",
-//   "t_e_st",
-//   "t_e_s_t",
-//   "tes-t",
-//   "te-st",
-//   "t-est",
-//   "te-s-t",
-//   "t-es-t",
-//   "t-e-st",
-//   "t-e-s-t",
-// ];
-// const usernames = [
-//   "test",
-//   "tes_t",
-//   "te_st",
-//   "t_est",
-//   "te_s_t",
-//   "t_es_t",
-//   "t_e_st",
-//   "t_e_s_t",
-//   "tes-t",
-//   "te-st",
-//   "t-est",
-//   "te-s-t",
-//   "t-es-t",
-//   "t-e-st",
-//   "t-e-s-t",
-// ];
-// const emails = [
-//   "test@example.com",
-//   "tes_t@example.com",
-//   "te_st@example.com",
-//   "t_est@example.com",
-//   "te_s_t@example.com",
-//   "t_es_t@example.com",
-//   "t_e_st@example.com",
-//   "t_e_s_t@example.com",
-//   "tes-t@example.com",
-//   "te-st@example.com",
-//   "t-est@example.com",
-//   "te-s-t@example.com",
-//   "t-es-t@example.com",
-//   "t-e-st@example.com",
-//   "t-e-s-t@example.com",
-// ];
-// fullNames.map(async (fullName, index) => {
-//   const admin = adminObj(
-//     fullName,
-//     usernames[index],
-//     emails[index],
-//     "1234",
-//     "active"
-//   );
-//   const adminInfo = await adminEntry(admin);
-//   console.log(adminInfo);
-// });

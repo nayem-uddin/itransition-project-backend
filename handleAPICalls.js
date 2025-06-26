@@ -1,6 +1,3 @@
-const express = require("express");
-const app = express();
-const cors = require("cors");
 const {
   authenticate,
   register,
@@ -12,14 +9,36 @@ const {
   getAllUsers,
   updateUserStatus,
   deleteUsers,
+  createTemplate,
+  updateTemplate,
 } = require("./handleDB/handleQueries");
-const { UniqueConstraintError } = require("sequelize");
-
-app.use(cors());
-app.use(express.json());
-app.listen(4000, () => {
-  console.log("app listening at localhost:4000");
+const { UniqueConstraintError, OptimisticLockError } = require("sequelize");
+const {
+  validateAdminAccess,
+  limiter,
+  validateUserAccess,
+  validateTemplate,
+} = require("./middleware");
+const { frontEndUrl } = require("./handleDB/utilities");
+const express = require("express");
+const app = express();
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+app.listen(5000, () => {
+  console.log("Server running at port 5000");
 });
+app.use(
+  cors({
+    origin: frontEndUrl,
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(cookieParser());
+app.use(limiter);
+app.use("/admins", validateAdminAccess);
+app.use("/users", validateAdminAccess);
+app.use("/templates", validateUserAccess);
 
 app.post("/signup", async (req, res, next) => {
   try {
@@ -82,6 +101,11 @@ app.put("/admins", async (req, res, next) => {
     await updateAdminStatus(selectionList, status);
     res.status(200).send({ message: "Updated successfully" });
   } catch (error) {
+    if (error instanceof OptimisticLockError) {
+      return res
+        .status(409)
+        .send({ message: "Please try again after a while" });
+    }
     next(error);
   }
 });
@@ -91,6 +115,11 @@ app.delete("/admins", async (req, res, next) => {
     await deleteAdmins(req.body);
     res.status(200).send({ message: "Deleted successfully" });
   } catch (error) {
+    if (error instanceof OptimisticLockError) {
+      return res
+        .status(409)
+        .send({ message: "Please try again after a while" });
+    }
     next(error);
   }
 });
@@ -126,6 +155,11 @@ app.put("/users", async (req, res, next) => {
     await updateUserStatus(selectionList, status);
     res.status(200).send({ message: "Updated successfully" });
   } catch (error) {
+    if (error instanceof OptimisticLockError) {
+      return res
+        .status(409)
+        .send({ message: "Please try again after a while" });
+    }
     next(error);
   }
 });
@@ -134,6 +168,33 @@ app.delete("/users", async (req, res, next) => {
   try {
     await deleteUsers(req.body);
     res.status(200).send({ message: "Deleted successfully" });
+  } catch (error) {
+    if (error instanceof OptimisticLockError) {
+      return res
+        .status(409)
+        .send({ message: "Please try again after a while" });
+    }
+    next(error);
+  }
+});
+
+app.post("/templates", validateTemplate, async (req, res, next) => {
+  try {
+    await createTemplate(req.body);
+    res
+      .status(201)
+      .send({ text: "Template created Successfully", type: "confirmation" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.put("/templates", validateTemplate, async (req, res, next) => {
+  try {
+    await updateTemplate(req.body);
+    res
+      .status(200)
+      .send({ text: "Successfully updated", type: "confirmation" });
   } catch (error) {
     next(error);
   }
