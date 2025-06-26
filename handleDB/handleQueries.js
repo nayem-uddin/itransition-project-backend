@@ -10,7 +10,6 @@ const {
 const { destructureProps, getSelectedIDs, encrypt } = require("./utilities");
 
 async function register(userInfo) {
-  // await User.sync();
   const { password } = userInfo;
   const passEncrypted = encrypt(password);
   const user = await User.create({ ...userInfo, password: passEncrypted });
@@ -18,7 +17,6 @@ async function register(userInfo) {
 }
 
 async function authenticate(userInfo) {
-  // await User.sync();
   const { password } = userInfo;
   const passEncrypted = encrypt(password);
   const user = await User.findOne({
@@ -28,7 +26,6 @@ async function authenticate(userInfo) {
 }
 
 async function getAllUsers() {
-  // await User.sync();
   const users = await User.findAll();
   return users;
 }
@@ -93,16 +90,11 @@ async function createTemplate(template) {
     tagname: tag,
   }));
   await Tag.bulkCreate(tagnames, { ignoreDuplicates: true });
-  // await Question.sync();
-  // await Template.sync();
   const newTemplate = await Template.create(template, { include: [Question] });
   return newTemplate;
 }
 
 async function getAllTemplates() {
-  // await Template.sync();
-  // await Question.sync();
-  // await Comment.sync();
   const templates = await Template.findAll({
     include: [Question, Comment, { model: User, attributes: ["fullName"] }],
   });
