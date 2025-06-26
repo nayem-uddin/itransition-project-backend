@@ -17,7 +17,10 @@ function encrypt(password) {
 
 const CASCADE = "CASCADE";
 // const frontEndUrl = "http://localhost:5173";
-const frontEndUrl = "https://itransition-project-frontend.vercel.app";
+const frontEndUrl = [
+  "https://itransition-project-frontend.vercel.app",
+  "http://localhost:5173",
+];
 module.exports = {
   destructureProps,
   getSelectedIDs,

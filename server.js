@@ -9,6 +9,7 @@ const { createServer } = require("http");
 const { app } = require("./handleAPICalls");
 const { frontEndUrl } = require("./handleDB/utilities");
 const { Server } = require("socket.io");
+const { sequelize } = require("./handleDB/connectDB");
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
@@ -16,7 +17,8 @@ const io = new Server(httpServer, {
     credentials: true,
   },
 });
-httpServer.listen(5000, () => {
+httpServer.listen(5000, async () => {
+  await sequelize.sync();
   console.log("server running at 5000");
 });
 

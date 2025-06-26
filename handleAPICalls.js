@@ -180,7 +180,17 @@ app.delete("/users", async (req, res, next) => {
 
 app.post("/templates", validateTemplate, async (req, res, next) => {
   try {
-    await createTemplate(req.body);
+    const template = req.body;
+    ["Comments", "id", "createdAt", "updatedAt", "likes"].map((prop) => {
+      delete template[prop];
+    });
+    template.Questions.map((question) => {
+      ["id", "TemplateId", "createdAt", "updatedAt"].map((prop) => {
+        delete question[prop];
+      });
+    });
+    await createTemplate(template);
+    // console.log(req.body);
     res
       .status(201)
       .send({ text: "Template created Successfully", type: "confirmation" });

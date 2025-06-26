@@ -157,7 +157,6 @@ User.hasMany(Comment, {
 Comment.belongsTo(User);
 Template.hasMany(Question, {
   onDelete: CASCADE,
-  onUpdate: CASCADE,
 });
 Question.belongsTo(Template);
 User.hasMany(Template, {
