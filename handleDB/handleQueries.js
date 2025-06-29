@@ -6,40 +6,14 @@ const {
   Template,
   Question,
   Comment,
+  Form,
 } = require("./models");
-const { destructureProps, getSelectedIDs, encrypt } = require("./utilities");
+const { destructureProps, getSelectedIDs, encrypt } = require("../utilities");
 
-async function register(userInfo) {
-  const { password } = userInfo;
-  const passEncrypted = encrypt(password);
-  const user = await User.create({ ...userInfo, password: passEncrypted });
-  return user;
-}
-
-async function authenticate(userInfo) {
-  const { password } = userInfo;
-  const passEncrypted = encrypt(password);
-  const user = await User.findOne({
-    where: { ...userInfo, password: passEncrypted },
-  });
-  return user;
-}
-
-async function getAllUsers() {
-  const users = await User.findAll();
-  return users;
-}
-
-async function updateUserStatus(selectionList, status) {
-  const idList = getSelectedIDs(selectionList);
-  const users = await User.update({ status }, { where: { id: idList } });
-  return users;
-}
-
-async function deleteUsers(selectionList) {
-  const idList = getSelectedIDs(selectionList);
-  const users = await User.destroy({ where: { id: idList } });
-  return users;
+async function addNewAdmins(users) {
+  const usersInfo = users.map(destructureProps);
+  const newAdmins = await Admin.bulkCreate(usersInfo);
+  return newAdmins;
 }
 
 async function adminAccess(adminInfo) {
@@ -51,37 +25,13 @@ async function adminAccess(adminInfo) {
   return admin;
 }
 
-async function getAdminsList() {
-  const admins = await Admin.findAll();
-  return admins;
-}
-
-async function updateAdminStatus(selectionList, status) {
-  const idList = getSelectedIDs(selectionList);
-  const admins = await Admin.update({ status }, { where: { id: idList } });
-  return admins;
-}
-
-async function deleteAdmins(selectionList) {
-  const selectedIDs = getSelectedIDs(selectionList);
-  const admins = await Admin.destroy({ where: { id: selectedIDs } });
-  return admins;
-}
-
-async function addNewAdmins(users) {
-  const usersInfo = users.map(destructureProps);
-  const newAdmins = await Admin.bulkCreate(usersInfo);
-  return newAdmins;
-}
-
-async function getTags() {
-  const tags = await Tag.findAll({ attributes: ["tagname"] });
-  return tags.map((tag) => tag.tagname);
-}
-
-async function getTopics() {
-  const topics = await Topic.findAll({ attributes: ["topic"] });
-  return topics.map((topic) => topic.topic);
+async function authenticate(userInfo) {
+  const { password } = userInfo;
+  const passEncrypted = encrypt(password);
+  const user = await User.findOne({
+    where: { ...userInfo, password: passEncrypted },
+  });
+  return user;
 }
 
 async function createTemplate(template) {
@@ -94,11 +44,43 @@ async function createTemplate(template) {
   return newTemplate;
 }
 
+async function deleteAdmins(selectionList) {
+  const selectedIDs = getSelectedIDs(selectionList);
+  const admins = await Admin.destroy({ where: { id: selectedIDs } });
+  return admins;
+}
+
+async function deleteUsers(selectionList) {
+  const idList = getSelectedIDs(selectionList);
+  const users = await User.destroy({ where: { id: idList } });
+  return users;
+}
+
+async function getAdminsList() {
+  const admins = await Admin.findAll();
+  return admins;
+}
+
+async function getAllForms() {
+  const forms = await Form.findAll({
+    include: {
+      model: Template,
+      include: { model: User, attributes: ["fullName"] },
+    },
+  });
+  return forms;
+}
+
 async function getAllTemplates() {
   const templates = await Template.findAll({
     include: [Question, Comment, { model: User, attributes: ["fullName"] }],
   });
   return templates;
+}
+
+async function getAllUsers() {
+  const users = await User.findAll();
+  return users;
 }
 
 async function getCreatedTemplates(userId) {
@@ -107,6 +89,53 @@ async function getCreatedTemplates(userId) {
     include: [Question, Comment],
   });
   return templates;
+}
+
+async function getReceivedForms(TemplateId) {
+  const forms = await Form.findAll({
+    where: { TemplateId },
+    include: [{ model: Template }, { model: User, attributes: ["fullName"] }],
+  });
+  return forms;
+}
+
+async function getSentForms(UserId) {
+  const forms = await Form.findAll({
+    where: { UserId },
+    include: {
+      model: Template,
+      include: { model: User, attributes: ["fullName"] },
+    },
+  });
+  return forms;
+}
+
+async function getTags() {
+  const tags = await Tag.findAll({ attributes: ["tagname"] });
+  return tags.map((tag) => tag.tagname);
+}
+
+async function getTopics() {
+  const topics = await Topic.findAll({ attributes: ["topic"] });
+  return topics.map((topic) => topic.topic);
+}
+
+async function recordResponse(form) {
+  const record = await Form.upsert(form);
+  return record;
+}
+
+async function register(userInfo) {
+  const { password } = userInfo;
+  const passEncrypted = encrypt(password);
+  const user = await User.create({ ...userInfo, password: passEncrypted });
+  return user;
+}
+
+async function updateAdminStatus(selectionList, status) {
+  const idList = getSelectedIDs(selectionList);
+  const admins = await Admin.update({ status }, { where: { id: idList } });
+  return admins;
 }
 
 async function updateTemplate(template) {
@@ -118,6 +147,12 @@ async function updateTemplate(template) {
     await Question.upsert({ ...q, TemplateId: id });
   }
   return updatedTemplate;
+}
+
+async function updateUserStatus(selectionList, status) {
+  const idList = getSelectedIDs(selectionList);
+  const users = await User.update({ status }, { where: { id: idList } });
+  return users;
 }
 
 module.exports = {
@@ -137,4 +172,8 @@ module.exports = {
   getAllTemplates,
   getCreatedTemplates,
   updateTemplate,
+  recordResponse,
+  getAllForms,
+  getReceivedForms,
+  getSentForms,
 };

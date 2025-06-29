@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("./connectDB");
-const { CASCADE } = require("./utilities");
+const { CASCADE } = require("../utilities");
 
 const User = sequelize.define(
   "User",
@@ -139,6 +139,10 @@ const Question = sequelize.define("Question", {
   options: {
     type: DataTypes.JSON,
   },
+  showOnPreview: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
 });
 
 const Comment = sequelize.define("Comment", {
@@ -147,6 +151,16 @@ const Comment = sequelize.define("Comment", {
   },
 });
 
+const Form = sequelize.define("form", {
+  response: {
+    type: DataTypes.JSON,
+  },
+});
+
+Template.hasMany(Form, { onDelete: CASCADE });
+Form.belongsTo(Template);
+User.hasMany(Form);
+Form.belongsTo(User, { onDelete: CASCADE });
 Template.hasMany(Comment, {
   onDelete: CASCADE,
 });
@@ -164,4 +178,13 @@ User.hasMany(Template, {
 });
 Template.belongsTo(User);
 
-module.exports = { User, Admin, Tag, Topic, Template, Question, Comment };
+module.exports = {
+  User,
+  Admin,
+  Tag,
+  Topic,
+  Template,
+  Question,
+  Comment,
+  Form,
+};

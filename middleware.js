@@ -1,5 +1,6 @@
 const { default: rateLimit } = require("express-rate-limit");
 const { Admin, User } = require("./handleDB/models");
+const { recordResponse } = require("./handleDB/handleQueries");
 
 async function validateAdminAccess(req, res, next) {
   const adminInfo = await Admin.findOne({ where: { id: req.cookies.id } });
@@ -39,14 +40,23 @@ function validateTemplate(req, res, next) {
     )
   );
   if (numOfEachType.some((n) => n > 4)) {
-    return res
-      .status(400)
-      .send({
-        text: "Only 4 questions of each type are allowed",
-        type: "error",
-      });
+    return res.status(400).send({
+      text: "Only 4 questions of each type are allowed",
+      type: "error",
+    });
   }
   next();
+}
+
+async function formInsertOrUpdate(req, res, next) {
+  try {
+    await recordResponse(req.body);
+    res
+      .status(200)
+      .send({ text: "Response recorded successfully", type: "confirmation" });
+  } catch (error) {
+    next(error);
+  }
 }
 
 const limiter = rateLimit({
@@ -60,4 +70,5 @@ module.exports = {
   validateUserAccess,
   limiter,
   validateTemplate,
+  formInsertOrUpdate,
 };
