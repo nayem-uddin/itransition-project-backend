@@ -3,7 +3,6 @@ const { Admin, User } = require("./handleDB/models");
 const { recordResponse } = require("./handleDB/handleQueries");
 
 async function validateAdminAccess(req, res, next) {
-  console.log("cookie received: " + JSON.stringify(req.cookies));
   const adminInfo = await Admin.findOne({ where: { id: req.cookies.id } });
   if (adminInfo === null) {
     return res
