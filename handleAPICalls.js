@@ -79,6 +79,7 @@ app.post("/admin-login", async (req, res, next) => {
     } else if (adminInfo.status === "blocked") {
       return res.status(403).send({ message: "Sorry, you are blocked" });
     }
+    res.cookie("id", adminInfo.id, { httpOnly: true, sameSite: "none" });
     res.status(200).send({ message: "Access granted", adminInfo });
   } catch (error) {
     next(error);
