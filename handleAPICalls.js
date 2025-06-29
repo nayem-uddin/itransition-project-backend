@@ -27,18 +27,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 app.use(
   cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = [
-        "https://itransition-project-frontend.vercel.app",
-        "http://localhost:5173",
-      ];
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-      console.log("origin requested: " + origin);
-    },
+    origin: frontEndUrl,
     credentials: true,
   })
 );
