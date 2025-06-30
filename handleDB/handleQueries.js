@@ -10,6 +10,11 @@ const {
 } = require("./models");
 const { destructureProps, getSelectedIDs, encrypt } = require("../utilities");
 
+async function addComment(comment) {
+  const newComment = await Comment.create(comment);
+  return newComment;
+}
+
 async function addNewAdmins(users) {
   const usersInfo = users.map(destructureProps);
   const newAdmins = await Admin.bulkCreate(usersInfo);
@@ -50,6 +55,10 @@ async function deleteAdmins(selectionList) {
   return admins;
 }
 
+async function deleteComment(comm) {
+  await Comment.destroy({ where: { id: comm.id } });
+}
+
 async function deleteUsers(selectionList) {
   const idList = getSelectedIDs(selectionList);
   const users = await User.destroy({ where: { id: idList } });
@@ -73,7 +82,7 @@ async function getAllForms() {
 
 async function getAllTemplates() {
   const templates = await Template.findAll({
-    include: [Question, Comment, { model: User, attributes: ["fullName"] }],
+    include: [Question, { model: User, attributes: ["fullName"] }],
   });
   return templates;
 }
@@ -86,9 +95,17 @@ async function getAllUsers() {
 async function getCreatedTemplates(userId) {
   const templates = await Template.findAll({
     where: { userId },
-    include: [Question, Comment],
+    include: [Question],
   });
   return templates;
+}
+
+async function getComments(TemplateId) {
+  const comments = await Comment.findAll({
+    where: { TemplateId },
+    include: { model: User },
+  });
+  return comments;
 }
 
 async function getReceivedForms(TemplateId) {
@@ -120,6 +137,12 @@ async function getTopics() {
   return topics.map((topic) => topic.topic);
 }
 
+async function handleLike(id, increment) {
+  await Template.increment({ likes: increment }, { where: { id } });
+  const template = await Template.findByPk(id, { attributes: ["likes"] });
+  return template.likes;
+}
+
 async function recordResponse(form) {
   const record = await Form.upsert(form);
   return record;
@@ -136,6 +159,12 @@ async function updateAdminStatus(selectionList, status) {
   const idList = getSelectedIDs(selectionList);
   const admins = await Admin.update({ status }, { where: { id: idList } });
   return admins;
+}
+
+async function updateComment(comm) {
+  const { comment, id } = comm;
+  const updatedComment = await Comment.update({ comment }, { where: { id } });
+  return updatedComment;
 }
 
 async function updateTemplate(template) {
@@ -176,4 +205,9 @@ module.exports = {
   getAllForms,
   getReceivedForms,
   getSentForms,
+  handleLike,
+  addComment,
+  getComments,
+  updateComment,
+  deleteComment,
 };

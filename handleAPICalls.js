@@ -11,6 +11,10 @@ const {
   deleteUsers,
   createTemplate,
   updateTemplate,
+  handleLike,
+  addComment,
+  updateComment,
+  deleteComment,
 } = require("./handleDB/handleQueries");
 const { UniqueConstraintError, OptimisticLockError } = require("sequelize");
 const {
@@ -215,6 +219,41 @@ app.put("/templates", async (req, res, next) => {
 
 app.post("/form", formInsertOrUpdate);
 app.post("/form-manipulate", validateAdminAccess, formInsertOrUpdate);
+app.put("/like", validateUserAccess, async (req, res, next) => {
+  try {
+    const { templateId, increment } = req.body;
+    const likes = await handleLike(templateId, increment);
+    res.status(200).send({ likes });
+  } catch (error) {
+    next(error);
+  }
+});
+app.post("/comment", validateUserAccess, async (req, res, next) => {
+  try {
+    await addComment(req.body);
+    res.status(201).send({ message: "Comment added" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.put("/comment", validateUserAccess, async (req, res, next) => {
+  try {
+    await updateComment(req.body);
+    res.status(200).send({ message: "Updated successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete("/comment", validateUserAccess, async (req, res, next) => {
+  try {
+    await deleteComment(req.body);
+    res.status(200).send({ message: "Deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.use((err, req, res, next) => {
   res

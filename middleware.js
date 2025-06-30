@@ -20,7 +20,10 @@ async function validateUserAccess(req, res, next) {
   if (userInfo === null) {
     return res
       .status(404)
-      .send({ text: "Account is deleted by an admin", type: "error" });
+      .send({
+        text: "Account doesn't exist or is deleted by an admin",
+        type: "error",
+      });
   }
   if (userInfo.status === "blocked") {
     return res

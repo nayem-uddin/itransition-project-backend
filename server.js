@@ -7,6 +7,8 @@ const {
   getAllForms,
   getSentForms,
   getReceivedForms,
+  handleLike,
+  getComments,
 } = require("./handleDB/handleQueries");
 const { createServer } = require("http");
 const { app } = require("./handleAPICalls");
@@ -61,5 +63,13 @@ io.on("connection", (socket) => {
   socket.on("request-received-forms", async (templateId) => {
     const forms = await getReceivedForms(templateId);
     io.emit("deliver-received-forms", { forms });
+  });
+  socket.on("update-likes", async (templateId) => {
+    const likes = await handleLike(templateId, 0);
+    io.emit("deliver-likes", { likes });
+  });
+  socket.on("update-comments", async (templateId) => {
+    const comments = await getComments(templateId);
+    io.emit("deliver-comments", { comments });
   });
 });
