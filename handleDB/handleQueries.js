@@ -9,6 +9,7 @@ const {
   Form,
 } = require("./models");
 const { destructureProps, getSelectedIDs, encrypt } = require("../utilities");
+const { literal } = require("sequelize");
 
 async function addComment(comment) {
   const newComment = await Comment.create(comment);
@@ -83,6 +84,21 @@ async function getAllForms() {
 async function getAllTemplates() {
   const templates = await Template.findAll({
     include: [Question, { model: User, attributes: ["fullName"] }],
+    attributes: {
+      include: [
+        [
+          literal(
+            `(
+          SELECT COUNT(*)
+          FROM forms
+          WHERE forms.TemplateId=Template.id
+          )`
+          ),
+          "formCount",
+        ],
+      ],
+    },
+    order: [["createdAt", "DESC"]],
   });
   return templates;
 }
