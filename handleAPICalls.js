@@ -15,6 +15,7 @@ const {
   addComment,
   updateComment,
   deleteComment,
+  deleteTemplates,
 } = require("./handleDB/handleQueries");
 const { UniqueConstraintError, OptimisticLockError } = require("sequelize");
 const {
@@ -23,6 +24,7 @@ const {
   validateUserAccess,
   validateTemplate,
   formInsertOrUpdate,
+  templateDeletionRequest,
 } = require("./middleware");
 const { frontEndUrl } = require("./utilities");
 const express = require("express");
@@ -40,7 +42,7 @@ app.use(cookieParser());
 app.use(limiter);
 app.use("/admins", validateAdminAccess);
 app.use("/users", validateAdminAccess);
-app.use("/templates", validateUserAccess, validateTemplate);
+app.use("/templates", validateUserAccess);
 app.use("/form", validateUserAccess);
 
 app.post("/signup", async (req, res, next) => {
@@ -186,7 +188,7 @@ app.delete("/users", async (req, res, next) => {
   }
 });
 
-app.post("/templates", async (req, res, next) => {
+app.post("/templates", validateTemplate, async (req, res, next) => {
   try {
     const template = req.body;
     ["Comments", "id", "createdAt", "updatedAt", "likes"].map((prop) => {
@@ -206,7 +208,7 @@ app.post("/templates", async (req, res, next) => {
   }
 });
 
-app.put("/templates", async (req, res, next) => {
+app.put("/templates", validateTemplate, async (req, res, next) => {
   try {
     await updateTemplate(req.body);
     res
@@ -216,6 +218,13 @@ app.put("/templates", async (req, res, next) => {
     next(error);
   }
 });
+
+app.delete("/templates", templateDeletionRequest);
+app.delete(
+  "/templates-manipulate",
+  validateAdminAccess,
+  templateDeletionRequest
+);
 
 app.post("/form", formInsertOrUpdate);
 app.post("/form-manipulate", validateAdminAccess, formInsertOrUpdate);

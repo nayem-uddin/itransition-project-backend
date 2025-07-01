@@ -60,6 +60,10 @@ async function deleteComment(comm) {
   await Comment.destroy({ where: { id: comm.id } });
 }
 
+async function deleteTemplates(templateIds) {
+  await Template.destroy({ where: { id: templateIds } });
+}
+
 async function deleteUsers(selectionList) {
   const idList = getSelectedIDs(selectionList);
   const users = await User.destroy({ where: { id: idList } });
@@ -226,4 +230,5 @@ module.exports = {
   getComments,
   updateComment,
   deleteComment,
+  deleteTemplates,
 };

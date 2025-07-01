@@ -1,6 +1,6 @@
 const { default: rateLimit } = require("express-rate-limit");
 const { Admin, User } = require("./handleDB/models");
-const { recordResponse } = require("./handleDB/handleQueries");
+const { recordResponse, deleteTemplates } = require("./handleDB/handleQueries");
 
 async function validateAdminAccess(req, res, next) {
   const adminInfo = await Admin.findOne({ where: { id: req.cookies.id } });
@@ -18,12 +18,10 @@ async function validateAdminAccess(req, res, next) {
 async function validateUserAccess(req, res, next) {
   const userInfo = await User.findOne({ where: { id: req.body.UserId } });
   if (userInfo === null) {
-    return res
-      .status(404)
-      .send({
-        text: "Account doesn't exist or is deleted by an admin",
-        type: "error",
-      });
+    return res.status(404).send({
+      text: "Account doesn't exist or is deleted by an admin",
+      type: "error",
+    });
   }
   if (userInfo.status === "blocked") {
     return res
@@ -62,6 +60,17 @@ async function formInsertOrUpdate(req, res, next) {
   }
 }
 
+async function templateDeletionRequest(req, res, next) {
+  try {
+    await deleteTemplates(req.body.templateIds);
+    res
+      .status(200)
+      .send({ text: "Successfully deleted", type: "confirmation" });
+  } catch (error) {
+    next(error);
+  }
+}
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 100,
@@ -74,4 +83,5 @@ module.exports = {
   limiter,
   validateTemplate,
   formInsertOrUpdate,
+  templateDeletionRequest,
 };
