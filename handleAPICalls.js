@@ -26,6 +26,7 @@ const {
   templateDeletionRequest,
   hasIds,
   questionsDeletionRequest,
+  templateUpdateRequest,
 } = require("./middleware");
 const { frontEndUrl } = require("./utilities");
 const express = require("express");
@@ -209,16 +210,13 @@ app.post("/templates", validateTemplate, async (req, res, next) => {
   }
 });
 
-app.put("/templates", validateTemplate, async (req, res, next) => {
-  try {
-    await updateTemplate(req.body);
-    res
-      .status(200)
-      .send({ text: "Successfully updated", type: "confirmation" });
-  } catch (error) {
-    next(error);
-  }
-});
+app.put("/templates", validateTemplate, templateUpdateRequest);
+app.put(
+  "/templates-manipulate",
+  validateAdminAccess,
+  validateTemplate,
+  templateUpdateRequest
+);
 
 app.delete("/templates", hasIds, templateDeletionRequest);
 app.delete(
