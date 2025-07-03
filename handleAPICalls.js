@@ -16,6 +16,7 @@ const {
   updateComment,
   deleteComment,
   deleteTemplates,
+  deleteQuestions,
 } = require("./handleDB/handleQueries");
 const { UniqueConstraintError, OptimisticLockError } = require("sequelize");
 const {
@@ -25,6 +26,7 @@ const {
   validateTemplate,
   formInsertOrUpdate,
   templateDeletionRequest,
+  hasIds,
 } = require("./middleware");
 const { frontEndUrl } = require("./utilities");
 const express = require("express");
@@ -219,10 +221,11 @@ app.put("/templates", validateTemplate, async (req, res, next) => {
   }
 });
 
-app.delete("/templates", templateDeletionRequest);
+app.delete("/templates", hasIds, templateDeletionRequest);
 app.delete(
   "/templates-manipulate",
   validateAdminAccess,
+  hasIds,
   templateDeletionRequest
 );
 
@@ -259,6 +262,21 @@ app.delete("/comment", validateUserAccess, async (req, res, next) => {
   try {
     await deleteComment(req.body);
     res.status(200).send({ message: "Deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete("/questions", validateUserAccess, async (req, res, next) => {
+  try {
+    const { selectedQuestions } = req.body;
+    const parsedQuestions = selectedQuestions.map((q) => JSON.parse(q));
+    const filteredQuestions = parsedQuestions.filter((q) => "id" in q);
+    const qIds = filteredQuestions.map((q) => q.id);
+    await deleteQuestions(qIds);
+    return res
+      .status(200)
+      .send({ text: "Deleted successfully", type: "confirmation" });
   } catch (error) {
     next(error);
   }

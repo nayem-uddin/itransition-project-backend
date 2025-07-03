@@ -60,6 +60,10 @@ async function deleteComment(comm) {
   await Comment.destroy({ where: { id: comm.id } });
 }
 
+async function deleteQuestions(qIds) {
+  await Question.destroy({ where: { id: qIds } });
+}
+
 async function deleteTemplates(templateIds) {
   await Template.destroy({ where: { id: templateIds } });
 }
@@ -231,4 +235,5 @@ module.exports = {
   updateComment,
   deleteComment,
   deleteTemplates,
+  deleteQuestions,
 };

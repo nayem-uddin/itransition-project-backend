@@ -49,6 +49,20 @@ function validateTemplate(req, res, next) {
   next();
 }
 
+function hasIds(req, res, next) {
+  try {
+    const ids = req.body.templateIds;
+    if (ids.length === 0) {
+      return res
+        .status(400)
+        .send({ text: "No template selected", type: "error" });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function formInsertOrUpdate(req, res, next) {
   try {
     await recordResponse(req.body);
@@ -84,4 +98,5 @@ module.exports = {
   validateTemplate,
   formInsertOrUpdate,
   templateDeletionRequest,
+  hasIds,
 };
