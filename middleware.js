@@ -1,6 +1,6 @@
 const { default: rateLimit } = require("express-rate-limit");
 const { Admin, User } = require("./handleDB/models");
-const { recordResponse, deleteTemplates } = require("./handleDB/handleQueries");
+const { recordResponse, deleteQuestions } = require("./handleDB/handleQueries");
 
 async function validateAdminAccess(req, res, next) {
   const adminInfo = await Admin.findOne({ where: { id: req.cookies.id } });
@@ -85,6 +85,21 @@ async function templateDeletionRequest(req, res, next) {
   }
 }
 
+async function questionsDeletionRequest(req, res, next) {
+  try {
+    const { selectedQuestions } = req.body;
+    const parsedQuestions = selectedQuestions.map((q) => JSON.parse(q));
+    const filteredQuestions = parsedQuestions.filter((q) => "id" in q);
+    const qIds = filteredQuestions.map((q) => q.id);
+    await deleteQuestions(qIds);
+    return res
+      .status(200)
+      .send({ text: "Deleted successfully", type: "confirmation" });
+  } catch (error) {
+    next(error);
+  }
+}
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 100,
@@ -99,4 +114,5 @@ module.exports = {
   formInsertOrUpdate,
   templateDeletionRequest,
   hasIds,
+  questionsDeletionRequest,
 };
