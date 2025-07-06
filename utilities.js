@@ -19,6 +19,7 @@ const CASCADE = "CASCADE";
 const frontEndUrl = [
   "https://itransition-project-frontend.vercel.app",
   "http://localhost:5173",
+  "https://itransition-project.netlify.app",
 ];
 module.exports = {
   destructureProps,
