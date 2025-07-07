@@ -28,10 +28,6 @@ httpServer.listen(5000, async () => {
 });
 
 io.on("connection", (socket) => {
-  socket.on("user-entry", (userId) => {
-    socket.userId = userId;
-    console.log(socket.userId + " is connected");
-  });
   socket.on("request-users", async () => {
     const users = await getAllUsers();
     socket.emit("send-users", { users });

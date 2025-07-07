@@ -46,6 +46,7 @@ app.use("/admins", validateAdminAccess);
 app.use("/users", validateAdminAccess);
 app.use("/templates", validateUserAccess);
 app.use("/form", validateUserAccess);
+app.use("/templates-manipulate", validateAdminAccess);
 
 app.post("/signup", async (req, res, next) => {
   try {
@@ -211,20 +212,10 @@ app.post("/templates", validateTemplate, async (req, res, next) => {
 });
 
 app.put("/templates", validateTemplate, templateUpdateRequest);
-app.put(
-  "/templates-manipulate",
-  validateAdminAccess,
-  validateTemplate,
-  templateUpdateRequest
-);
-
 app.delete("/templates", hasIds, templateDeletionRequest);
-app.delete(
-  "/templates-manipulate",
-  validateAdminAccess,
-  hasIds,
-  templateDeletionRequest
-);
+
+app.put("/templates-manipulate", validateTemplate, templateUpdateRequest);
+app.delete("/templates-manipulate", hasIds, templateDeletionRequest);
 
 app.post("/form", formInsertOrUpdate);
 app.post("/form-manipulate", validateAdminAccess, formInsertOrUpdate);
