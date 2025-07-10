@@ -4,7 +4,6 @@ const {
   getAllUsers,
   getAllTemplates,
   getCreatedTemplates,
-  getAllForms,
   getSentForms,
   getReceivedForms,
   handleLike,
@@ -47,10 +46,6 @@ io.on("connection", (socket) => {
   socket.on("request-created-templates", async (userId) => {
     const templates = await getCreatedTemplates(userId);
     socket.emit("get-created-templates", { templates });
-  });
-  socket.on("request-forms", async () => {
-    const forms = await getAllForms();
-    io.emit("send-forms", { forms });
   });
   socket.on("request-sent-forms", async (userId) => {
     const forms = await getSentForms(userId);

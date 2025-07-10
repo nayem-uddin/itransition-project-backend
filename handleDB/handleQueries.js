@@ -7,6 +7,7 @@ const {
   Question,
   Comment,
   Form,
+  Answer,
 } = require("./models");
 const { destructureProps, getSelectedIDs, encrypt } = require("../utilities");
 const { literal } = require("sequelize");
@@ -62,16 +63,22 @@ async function deleteComment(comm) {
 
 async function deleteQuestions(qIds) {
   await Question.destroy({ where: { id: qIds } });
+  await Answer.destroy({ where: { QuestionId: null } });
 }
 
 async function deleteTemplates(templateIds) {
   await Template.destroy({ where: { id: templateIds } });
+  await Form.destroy({ where: { TemplateId: null } });
+  await Question.destroy({ where: { TemplateId: null } });
 }
 
 async function deleteUsers(selectionList) {
   const idList = getSelectedIDs(selectionList);
-  const users = await User.destroy({ where: { id: idList } });
-  return users;
+  await User.destroy({ where: { id: idList } });
+  const nulUserId = { UserId: null };
+  await Template.destroy({ where: nulUserId });
+  await Comment.destroy({ where: nulUserId });
+  await Form.destroy({ where: nulUserId });
 }
 
 async function getAdminsList() {
@@ -79,17 +86,8 @@ async function getAdminsList() {
   return admins;
 }
 
-async function getAllForms() {
-  const forms = await Form.findAll({
-    include: {
-      model: Template,
-      include: { model: User, attributes: ["fullName"] },
-    },
-  });
-  return forms;
-}
-
 async function getAllTemplates() {
+  await Question.destroy({ where: { TemplateId: null } });
   const templates = await Template.findAll({
     include: [Question, { model: User, attributes: ["fullName"] }],
     attributes: {
@@ -117,6 +115,7 @@ async function getAllUsers() {
 }
 
 async function getCreatedTemplates(userId) {
+  await Question.destroy({ where: { TemplateId: null } });
   const templates = await Template.findAll({
     where: { userId },
     include: [Question],
@@ -133,20 +132,32 @@ async function getComments(TemplateId) {
 }
 
 async function getReceivedForms(TemplateId) {
+  await Answer.destroy({ where: { formId: null } });
   const forms = await Form.findAll({
     where: { TemplateId },
-    include: [{ model: Template }, { model: User, attributes: ["fullName"] }],
+    include: [
+      { model: Template },
+      { model: User, attributes: ["fullName"] },
+      { model: Answer, include: Question },
+    ],
   });
   return forms;
 }
 
 async function getSentForms(UserId) {
+  await Answer.destroy({ where: { formId: null } });
   const forms = await Form.findAll({
     where: { UserId },
-    include: {
-      model: Template,
-      include: { model: User, attributes: ["fullName"] },
-    },
+    include: [
+      {
+        model: Template,
+        include: { model: User, attributes: ["fullName"] },
+      },
+      {
+        model: Answer,
+        include: Question,
+      },
+    ],
   });
   return forms;
 }
@@ -168,7 +179,10 @@ async function handleLike(id, increment) {
 }
 
 async function recordResponse(form) {
-  const record = await Form.upsert(form);
+  const [record, created] = await Form.upsert(form);
+  for (let answer of form.answers) {
+    await Answer.upsert({ ...answer, formId: record.id });
+  }
   return record;
 }
 
@@ -226,7 +240,6 @@ module.exports = {
   getCreatedTemplates,
   updateTemplate,
   recordResponse,
-  getAllForms,
   getReceivedForms,
   getSentForms,
   handleLike,

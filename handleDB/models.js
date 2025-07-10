@@ -151,31 +151,28 @@ const Comment = sequelize.define("Comment", {
   },
 });
 
-const Form = sequelize.define("form", {
-  response: {
+const Form = sequelize.define("form");
+const Answer = sequelize.define("answer", {
+  answer: {
     type: DataTypes.JSON,
   },
 });
 
-Template.hasMany(Form, { onDelete: CASCADE });
+Answer.belongsTo(Form);
+Form.hasMany(Answer);
+Answer.belongsTo(Question);
+Question.hasMany(Answer);
+Template.hasMany(Form);
 Form.belongsTo(Template);
 User.hasMany(Form);
-Form.belongsTo(User, { onDelete: CASCADE });
-Template.hasMany(Comment, {
-  onDelete: CASCADE,
-});
+Form.belongsTo(User);
+Template.hasMany(Comment);
 Comment.belongsTo(Template);
-User.hasMany(Comment, {
-  onDelete: CASCADE,
-});
+User.hasMany(Comment);
 Comment.belongsTo(User);
-Template.hasMany(Question, {
-  onDelete: CASCADE,
-});
+Template.hasMany(Question);
 Question.belongsTo(Template);
-User.hasMany(Template, {
-  onDelete: CASCADE,
-});
+User.hasMany(Template);
 Template.belongsTo(User);
 
 module.exports = {
@@ -187,4 +184,5 @@ module.exports = {
   Question,
   Comment,
   Form,
+  Answer,
 };
