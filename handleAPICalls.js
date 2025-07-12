@@ -28,11 +28,14 @@ const {
   questionsDeletionRequest,
   templateUpdateRequest,
 } = require("./middleware");
+require("dotenv").config();
 const { frontEndUrl } = require("./utilities");
 const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const { conn } = require("./connectSalesforceAPI");
+const { Connection } = require("jsforce");
 app.use(
   cors({
     origin: frontEndUrl,
@@ -261,6 +264,16 @@ app.delete(
   validateAdminAccess,
   questionsDeletionRequest
 );
+
+app.post("/oauth2/auth", async (req, res, next) => {
+  try {
+    const credentials = req.body;
+    await conn.sobject("Account").create(credentials);
+    res.status(201).send({ message: "Successfully created" });
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.use((err, req, res, next) => {
   res
