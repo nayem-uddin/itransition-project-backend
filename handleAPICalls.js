@@ -15,6 +15,7 @@ const {
   addComment,
   updateComment,
   deleteComment,
+  getAllAdminsEmails,
 } = require("./handleDB/handleQueries");
 const { UniqueConstraintError, OptimisticLockError } = require("sequelize");
 const {
@@ -36,6 +37,8 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { conn } = require("./connectSalesforceAPI");
 const { Connection } = require("jsforce");
+const { getdbxClient } = require("./connectDropbox");
+
 app.use(
   cors({
     origin: frontEndUrl,
@@ -269,7 +272,31 @@ app.post("/oauth2/auth", async (req, res, next) => {
   try {
     const credentials = req.body;
     await conn.sobject("Account").create(credentials);
-    res.status(201).send({ message: "Successfully created" });
+    res.status(201).send({ message: "Successfully registered" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/report", async (req, res, next) => {
+  try {
+    const date = new Date();
+    const report = req.body;
+    const adminsEmail = await getAllAdminsEmails();
+    adminsEmail.push("nayem.itransition@gmail.com");
+    Object.assign(report, { adminsEmail });
+    const path = `/user reports/report-${
+      report["reported by"]
+    }-${date.toISOString()}.json`;
+    const dbx = await getdbxClient();
+
+    const response = await dbx.filesUpload({
+      path,
+      contents: JSON.stringify(report),
+      mode: { ".tag": "add" },
+    });
+    // console.log(report);
+    res.status(201).send({ message: "Report submitted successfully" });
   } catch (error) {
     next(error);
   }

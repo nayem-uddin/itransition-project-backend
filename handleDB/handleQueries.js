@@ -114,6 +114,12 @@ async function getAllUsers() {
   return users;
 }
 
+async function getAllAdminsEmails() {
+  const emails = await Admin.findAll({ attributes: ["email"] });
+  const emailsOnly = emails.map((email) => email.email);
+  return emailsOnly;
+}
+
 async function getCreatedTemplates(userId) {
   await Question.destroy({ where: { TemplateId: null } });
   const templates = await Template.findAll({
@@ -249,4 +255,5 @@ module.exports = {
   deleteComment,
   deleteTemplates,
   deleteQuestions,
+  getAllAdminsEmails,
 };
