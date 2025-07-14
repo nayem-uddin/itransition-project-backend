@@ -16,7 +16,6 @@ async function getdbxClient() {
   });
   const data = await res.json();
   const accessToken = data.access_token;
-  console.log(data);
   return new Dropbox({ accessToken });
 }
 

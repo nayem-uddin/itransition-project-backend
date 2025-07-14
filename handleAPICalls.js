@@ -32,6 +32,7 @@ const {
 require("dotenv").config();
 const { frontEndUrl } = require("./utilities");
 const express = require("express");
+const router = express.Router();
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -287,16 +288,25 @@ app.post("/report", async (req, res, next) => {
     Object.assign(report, { adminsEmail });
     const path = `/user reports/report-${
       report["reported by"]
-    }-${date.toISOString()}.json`;
+    }-${date.valueOf()}.json`;
     const dbx = await getdbxClient();
-
-    const response = await dbx.filesUpload({
+    await dbx.filesUpload({
       path,
       contents: JSON.stringify(report),
       mode: { ".tag": "add" },
     });
-    // console.log(report);
     res.status(201).send({ message: "Report submitted successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/countries", async (req, res, next) => {
+  try {
+    const response = await fetch("https://www.apicountries.com/countries");
+    const data = await response.json();
+    const countries = data.map((country) => country.name);
+    res.json(countries);
   } catch (error) {
     next(error);
   }
