@@ -16,6 +16,8 @@ const {
   updateComment,
   deleteComment,
   getAllAdminsEmails,
+  getTemplateData,
+  getTemplateDataByUser,
 } = require("./handleDB/handleQueries");
 const { UniqueConstraintError, OptimisticLockError } = require("sequelize");
 const {
@@ -30,7 +32,12 @@ const {
   templateUpdateRequest,
 } = require("./middleware");
 require("dotenv").config();
-const { frontEndUrl } = require("./utilities");
+const {
+  frontEndUrl,
+  CustomError,
+  aggregate,
+  getCleanTemplate,
+} = require("./utilities");
 const express = require("express");
 const router = express.Router();
 const app = express();
@@ -307,6 +314,31 @@ app.get("/countries", async (req, res, next) => {
     const data = await response.json();
     const countries = data.map((country) => country.name);
     res.json(countries);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/aggregate/:templateId", async (req, res, next) => {
+  try {
+    const templateId = req.params.templateId;
+    const templateData = await getTemplateData(templateId);
+    const result = getCleanTemplate(templateData);
+    res.status(200).send(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/overview/:userId", async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+    const templates = await getTemplateDataByUser(userId);
+    if (templates.length === 0) {
+      throw new CustomError("User has no created template", 404);
+    }
+    const result = templates.map(getCleanTemplate);
+    res.status(200).send(result);
   } catch (error) {
     next(error);
   }

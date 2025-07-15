@@ -10,8 +10,12 @@ const {
   Answer,
 } = require("./models");
 const { destructureProps, getSelectedIDs, encrypt } = require("../utilities");
-const { literal } = require("sequelize");
-
+const { literal, where } = require("sequelize");
+const timestamps = ["updatedAt", "createdAt"];
+const formCount = [
+  literal(`(SELECT COUNT(*) FROM forms WHERE forms.TemplateId=Template.id)`),
+  "formCount",
+];
 async function addComment(comment) {
   const newComment = await Comment.create(comment);
   return newComment;
@@ -91,18 +95,7 @@ async function getAllTemplates() {
   const templates = await Template.findAll({
     include: [Question, { model: User, attributes: ["fullName"] }],
     attributes: {
-      include: [
-        [
-          literal(
-            `(
-          SELECT COUNT(*)
-          FROM forms
-          WHERE forms.TemplateId=Template.id
-          )`
-          ),
-          "formCount",
-        ],
-      ],
+      include: [formCount],
     },
     order: [["createdAt", "DESC"]],
   });
@@ -171,6 +164,63 @@ async function getSentForms(UserId) {
 async function getTags() {
   const tags = await Tag.findAll({ attributes: ["tagname"] });
   return tags.map((tag) => tag.tagname);
+}
+
+async function getTemplateData(TemplateId) {
+  const data = await Template.findByPk(TemplateId, {
+    attributes: ["title", formCount],
+    include: [
+      {
+        model: User,
+        attributes: ["fullName"],
+      },
+      {
+        model: Question,
+        include: { model: Answer, attributes: ["answer"] },
+        attributes: {
+          exclude: [...timestamps, "TemplateId", "id"],
+          include: [
+            [
+              literal(
+                "(SELECT COUNT(*) FROM answers WHERE answers.QuestionId=Questions.id)"
+              ),
+              "answersCount",
+            ],
+          ],
+        },
+      },
+    ],
+  });
+  return data;
+}
+
+async function getTemplateDataByUser(UserId) {
+  const data = await Template.findAll({
+    where: { UserId },
+    attributes: ["title", formCount],
+    include: [
+      {
+        model: User,
+        attributes: ["fullName"],
+      },
+      {
+        model: Question,
+        include: { model: Answer, attributes: ["answer"] },
+        attributes: {
+          exclude: [...timestamps, "TemplateId", "id"],
+          include: [
+            [
+              literal(
+                "(SELECT COUNT(*) FROM answers WHERE answers.QuestionId=Questions.id)"
+              ),
+              "answersCount",
+            ],
+          ],
+        },
+      },
+    ],
+  });
+  return data;
 }
 
 async function getTopics() {
@@ -256,4 +306,6 @@ module.exports = {
   deleteTemplates,
   deleteQuestions,
   getAllAdminsEmails,
+  getTemplateData,
+  getTemplateDataByUser,
 };
