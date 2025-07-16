@@ -299,7 +299,7 @@ app.post("/report", async (req, res, next) => {
     const dbx = await getdbxClient();
     await dbx.filesUpload({
       path,
-      contents: JSON.stringify(report),
+      contents: JSON.stringify(report,null,2),
       mode: { ".tag": "add" },
     });
     res.status(201).send({ message: "Report submitted successfully" });
