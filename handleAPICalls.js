@@ -37,9 +37,9 @@ const {
   CustomError,
   aggregate,
   getCleanTemplate,
+  getToken,
 } = require("./utilities");
 const express = require("express");
-const router = express.Router();
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -339,6 +339,15 @@ app.get("/overview/:userId", async (req, res, next) => {
     }
     const result = templates.map(getCleanTemplate);
     res.status(200).send(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/token", (req, res, next) => {
+  try {
+    const token = getToken();
+    res.status(200).json({ token });
   } catch (error) {
     next(error);
   }

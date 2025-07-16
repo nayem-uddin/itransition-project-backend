@@ -117,7 +117,7 @@ async function templateUpdateRequest(req, res, next) {
 }
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 5 * 60 * 1000,
   limit: 100,
   message: { message: "Too many requests. Please try again later" },
 });

@@ -1,5 +1,6 @@
 const cryptoJS = require("crypto-js");
 require("dotenv").config();
+const crypto = require("node:crypto");
 
 function destructureProps(adminInfo) {
   const { fullName, username, email, password } = adminInfo;
@@ -84,6 +85,11 @@ function getCleanTemplate(templateData) {
   return { ...dataValues, Questions: result };
 }
 
+function getToken() {
+  const token = crypto.randomBytes(32).toString("hex");
+  return token;
+}
+
 const CASCADE = "CASCADE";
 const frontEndUrl = [
   "https://itransition-project-frontend.vercel.app",
@@ -105,4 +111,5 @@ module.exports = {
   CustomError,
   aggregate,
   getCleanTemplate,
+  getToken,
 };
